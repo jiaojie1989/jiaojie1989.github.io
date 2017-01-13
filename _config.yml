@@ -15,7 +15,7 @@ description: > # this means to ignore newlines until "baseurl:"
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://webjeda.com" # the base hostname & protocol for your site
 
-permalink: :title/
+permalink: /_9a73d0cb5b2c02a22cff5bdb619916e9/:title/
 
 # Build settings
 markdown: kramdown
