@@ -1,16 +1,22 @@
 ---
 layout: page
-title: About
+title: About Author
+description: Self description
+keywords: JIAO Jie
 permalink: /about/
 ---
 
-Vyaasa is a Jekyll theme created for a no-distraction reader-friendly websites. It is free and open source project. 
+**Software Engineer at [SINA, Crop.](http://www.sina.com.cn/)**
 
-For more themes visit - [**Webjeda Jekyll Themes**](https://blog.webjeda.com/jekyll-themes/){: target="_blank"}
+Beijing City, China \| Computer Software
+  
+*Education:* Beijing University of Posts and Telecommunication, Information Engineering
 
-For Jekyll tutorials visit - [**Webjeda**](https://blog.webjeda.com/){: target="_blank"}
+*Contact:* `sprintf("%s@%s", "thomasjiao", "vip.qq.com")' #via PHP`
 
-Does the theme deserve a star?
-
-<a class="github-button" href="https://github.com/sharu725/vyaasa" data-style="mega" data-count-href="/sharu725/vyaasa/stargazers" data-count-api="/repos/sharu725/vyaasa#stargazers_count" data-count-aria-label="# stargazers on GitHub" aria-label="Star sharu725/vyaasa on GitHub">Star</a>
-<script async defer src="https://buttons.github.io/buttons.js"></script>
+*Social:*  [github](http://github.com/jiaojie1989) \|  [weibo](http://weibo.com/buptjiaojie) \|  [blog](http://blog.jiaojie.site/)
+    
+```php
+<?php
+echo "Hello world !";
+```

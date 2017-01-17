@@ -6,22 +6,22 @@
 # 'jekyll serve'. If you change this file, please restart the server process.
 
 # Site settings
-title: "Jiao's FATLab"
+title: "Jiao's LAB"
 title-font-size: '4em' # a provision to adjust the size of your title. If it is too long then do resize to a smaller value. By default it will be 4em.
 
-email: your-email@domain.com
+email: thomasjiao#vip.qq.com
 description: > # this means to ignore newlines until "baseurl:"
-  Vyaasa is a minimal Jekyll theme meant for writers. Long text posts will look good with this layout. This is a free theme and can be used for all kinds of Jekyll blogs.
+  There is something that you really care about.
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "http://webjeda.com" # the base hostname & protocol for your site
+url: "http://blog.jiaojie.site" # the base hostname & protocol for your site
 
-permalink: /_9a73d0cb5b2c02a22cff5bdb619916e9/:title/
+permalink: /_posts/:year/:month/:day/:title/
 
 # Build settings
 markdown: kramdown
 highlight: rouge
 paginate: 5
-paginate_path: /page_:num/
+paginate_path: /_pages_/:num/
 
 
 # Tracker
@@ -37,8 +37,12 @@ api-token:
 #CSS
 sass:
   style: compressed
-
-
+  
 include: [_pages]
 
-gems: [jekyll-paginate, jekyll-seo-tag]
+gems: 
+  - jekyll-paginate
+  - jekyll-seo-tag
+  - jekyll-archives
+  - jekyll-feed
+  - jekyll-sitemap
