@@ -6,11 +6,11 @@ keywords: JIAO Jie
 permalink: /about/
 ---
 
-**Software Engineer at [SINA, Crop.](http://www.sina.com.cn/)**
+**Software Engineer at [SINA, Crop.](http://finance.sina.com.cn/)**
 
-Beijing City, China \| Computer Software
+Beijing City, China
   
-*Education:* Beijing University of Posts and Telecommunication, Information Engineering
+*Education:* Beijing University of Posts and Telecommunication
 
 *Contact:* `sprintf("%s@%s", "thomasjiao", "vip.qq.com")' #via PHP`
 
@@ -18,5 +18,5 @@ Beijing City, China \| Computer Software
     
 ```php
 <?php
-echo "Hello world !";
+echo "Hello, Friends !";
 ```
