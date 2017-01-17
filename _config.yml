@@ -39,6 +39,7 @@ sass:
   style: compressed
   
 include: [_pages]
+subscribe_rss: /feed.xml
 
 gems: 
   - jekyll-paginate
