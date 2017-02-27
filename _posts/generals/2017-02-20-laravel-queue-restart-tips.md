@@ -129,3 +129,139 @@ class Worker {
 {% endhighlight %}
 
 `daemon`方法执行队列中拿到的事件，每次执行完一个事件之后，程序对缓存中`illuminate:queue:restart`中的时间戳进行判断，如果和`daemon`方法启动时的时间戳不同，那么说明发生了变化，程序需要重启。
+
+由此，对程序中消费Redis里面Monolog产生的错误日志到Sentry系统的程序进行了改动：
+{% highlight php %}
+<?php
+
+/*
+ * Copyright (C) 2016 SINA Corporation
+ *  
+ *  
+ * 
+ * This script is firstly created at 2016-12-15.
+ * 
+ * To see more infomation,
+ *    visit our official website http://app.finance.sina.com.cn/.
+ */
+
+namespace App\Console\Commands\Logs;
+
+use Illuminate\Console\Command;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputArgument;
+use SinaRedis;
+use Cache;
+
+/**
+ * Description of ErrorLog
+ * 
+ * @encoding UTF-8 
+ * @author jiaojie <jiaojie@staff.sina.com.cn>
+ * @since 2016-12-15 14:34 (CST) 
+ * @version 0.1
+ * @description 
+ */
+class ErrorLog extends Command
+{
+
+    const RESTART_TIMESTAMP = "finapp:errorlog:restart:timestamp";
+
+    /**
+     * The console command name.
+     *
+     * @var string
+     */
+    protected $name = 'finlog:error:consumer';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = '消费monolog redis里面的错误日志到172.16.7.27上面的sentry';
+
+    /**
+     * Create a new command instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    /**
+     * Execute the console command.
+     *
+     * @return mixed
+     */
+    public function fire()
+    {
+        $redis = SinaRedis::connection("log");
+        $serverIp = $this->option("server");
+        if (empty($serverIp)) {
+            $serverIp = "unknown";
+        }
+
+        $getDate = function($oldDate) {
+            $timestamp = strtotime($oldDate);
+            $zone = date_default_timezone_get();
+            date_default_timezone_set("UTC");
+            $newDate = date("Y-m-d") . "T" . date("H:i:s") . "Z";
+            date_default_timezone_set($zone);
+            return $newDate;
+        };
+
+        $lastTimestamp = $this->getLastTimestampOfRestart();
+
+        while (1) {
+            if ($this->shouldStop($lastTimestamp)) {
+                exit(0);
+            }
+
+            $data = $redis->lpop("finApi::monolog");
+            if (empty($data)) {
+                sleep(1);
+                continue;
+            }
+            // 业务逻辑处理
+        }
+    }
+
+    protected function shouldStop($lastTimestamp)
+    {
+        return $lastTimestamp != $this->getLastTimestampOfRestart();
+    }
+
+    protected function getLastTimestampOfRestart()
+    {
+        return Cache::get(self::RESTART_TIMESTAMP);
+    }
+
+    /**
+     * Get the console command arguments.
+     *
+     * @return array
+     */
+    protected function getArguments()
+    {
+        return [
+//			['example', InputArgument::REQUIRED, 'An example argument.'],
+        ];
+    }
+
+    /**
+     * Get the console command options.
+     *
+     * @return array
+     */
+    protected function getOptions()
+    {
+        return [
+            ['server', null, InputOption::VALUE_REQUIRED, 'cron server ip', null],
+        ];
+    }
+
+}
+{% endhighlight %}
