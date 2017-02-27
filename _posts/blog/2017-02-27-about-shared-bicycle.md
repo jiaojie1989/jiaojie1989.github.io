@@ -2,7 +2,7 @@
 layout: post
 title: 关于共享单车的一些想法
 categories: [Blog]
-description: Say Hello to 2017 !
+description: 共享单车？
 keywords: Blog, 2017
 ---
 
