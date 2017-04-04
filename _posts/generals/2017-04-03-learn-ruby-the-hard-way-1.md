@@ -2,7 +2,7 @@
 layout: post
 title: Learn Ruby The Hard Way - 1
 categories: [Ruby, Programming Language]
-description: Ruby
+description: About Ruby Strings and Outputs
 keywords: Ruby
 ---
 ## Strings And Printings 字符串与输出
