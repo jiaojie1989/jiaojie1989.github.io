@@ -2,7 +2,7 @@
 layout: post
 title: Learn Ruby The Hard Way - 2
 categories: [Ruby, Programming Language]
-description: About Input and Interaction
+description: Arguments
 keywords: Ruby
 ---
 ## Arguments
@@ -52,3 +52,4 @@ puts gets.chomp # if no file called 'test' exists
 puts STDIN.gets.chomp # input'hello\n'
 # output 'hello'
 {% endhighlight %}
+
