@@ -31,3 +31,24 @@ a, b, c = ARGV # unpack 解包
 puts a, b, c # 'a', 'b', 'c'
 {% endhighlight %}
 
+### STDIN
+
+标准输入，`stdin``stdout``stderr`三个标准io中的input。
+
+### gets
+
+如果没有附加参数，直接调用的gets相当于标准输入的gets；相反，如有附加参数，gets相当于从以附加参数为文件名的文件中读取输入。
+
+{% highlight ruby %}
+# run `ruby test.rb`
+puts gets.chomp # input 'hello\n'
+# output 'hello'
+
+# run `ruby test.rb test` with no such file exist
+puts gets.chomp # if no file called 'test' exists
+# test.rb:1:in `gets': No such file or directory @ rb_sysopen - test (Errno::ENOENT)
+
+# run `ruby test.rb test`
+puts STDIN.gets.chomp # input'hello\n'
+# output 'hello'
+{% endhighlight %}
