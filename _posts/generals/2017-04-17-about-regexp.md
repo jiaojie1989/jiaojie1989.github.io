@@ -188,3 +188,44 @@ ps，组名在javascript中不可用。
 |??|重复0次或1次，但尽可能少重复|
 |{n,m}?|重复n到m次，但尽可能少重复|
 |{n,}?|重复n次以上，但尽可能少重复|
+
+### 模式
+
+以下列举几个常见的模式：
+
+|模式|PCRE|说明|
+|:---:|:---:|:---|
+|i|PCRE_CASELESS|大小写不敏感匹配|
+|s|PCRE_DOTALL|点号元字符匹配所有字符，包含换行符。如果没有这个修饰符，点号不匹配换行符|
+|m|PCRE_MULTILINE|默认情况下，PCRE 认为目标字符串是由单行字符组成的(然而实际上它可能会包含多行)，当这个修饰符设置之后，“行首”和“行末”就会匹配目标字符串中任意换行符之前或之后|
+|x|PCRE_EXTENDED|(**注释用**)模式中的没有经过转义的或不在字符类中的空白数据字符总会被忽略， 并且位于一个未转义的字符类外部的#字符和下一个换行符之间的字符也被忽略|
+|u|PCRE_UTF8|utf-8字符匹配最好加上，否则会[截断](http://www.cnblogs.com/chunyin/p/4043043.html)|
+
+### 平衡组(条件子组)
+
+PHP中，[条件子组](http://php.net/manual/zh/regexp.reference.conditional.php)主要是以下两种：
+
+* (?(condition)yes-pattern)
+* (?(condition)yes-pattern\|no-pattern)
+
+表示的意义如下：
+> 如果条件满足，使用 yes-pattern，其他情况使用 no-pattern(如果指定了)。 如果有超过 2 个的可选子组，会产生给一个编译期错误。 
+
+condition内如果是数字n，表示第n个捕获组的条件，如果满足条件，那么执行yes，否则执行no或者pass。
+下述表达式匹配*一个没有括号的或者闭合括号包裹的字符序列*：
+{% highlight regex %}
+( \( )? [^()]+ (?(1) \) )
+{% endhighlight %}
+
+condition内如果是条件字符串(R)，那么表示递归，这个后面再说。
+
+condition内如果不是上述两种，那么必须是一个**断言**。
+下述表达式匹配*两种格式的字符串：dd-aaa-dd 或 dd-dd-dd。aaa 代表小写字母， dd 是数字*：
+{% highlight regex %}
+(?(?=[^a-z]*[a-z])
+\d{2}-[a-z]{3}-\d{2}  |  \d{2}-\d{2}-\d{2} )
+{% endhighlight %}
+
+### 递归
+
+待完善 http://php.net/manual/zh/regexp.reference.recursive.php
