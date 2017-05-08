@@ -1,8 +1,8 @@
 ---
 layout: post
-title: On Feedback System 用户反馈系统的设计
+title: Design A Feedback System
 categories: [Product System]
-description: On Feedback System
+description: How to Design A Feedback System
 keywords: Product System
 ---
 ## 用户反馈系统
@@ -110,9 +110,27 @@ MySQL utf8mb4字符集可以存储Emoji表情，而大多数现代浏览器也�
 
 ### 数据设计
 
+#### Crsf Token的存储
+
+Crsf Token是一种容易失效的数据，应该存入到一致性缓存中。
+
+考虑到短时间内，理论上机器对DNS的解析应该指向同一机房，但是也有其他情况（比如，电信用户突然切换到wifi），这里采用了两级缓存，优先读取机房所属Memcached集群的Token数据，其次读取Redis的数据，不做持久化存储。
+
+#### 反馈数据表
+
+按照产品功能划分成三张表
+
+* 用户反馈数据表
+* 用户反馈截图表
+* 回复表
+
 ### 中间件设计
 
+数据上行接口应该采用统一的校验方式，登录Uid验证、Token验证、防重复、防刷这些应该做成中间件的形式进行调用。
+
 ### 功能扩展设计
+
+目前，pm在规划用户消息中心，而原则上Feedback答复进度也应该有Push对用户进行相关提醒，Feedback系统后期还可以和公司的Jira进行集成，并且可以考虑邮件通知，所以这一部分可以采用Observer的形式进行开发。
 
 
 
