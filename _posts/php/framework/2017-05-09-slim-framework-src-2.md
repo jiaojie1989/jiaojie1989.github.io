@@ -2,55 +2,43 @@
 layout: post
 title: Slim Framework - 2
 categories: [Framework, PHP]
-description: Learn design patterns from PHP Framework Source Codes.
+description: Slim vendor sturcture and its main class analyzation.
 keywords: Framework, PHP
 ---
-# Generals
+# Structure
 
-## 框架简介
+Slim 3.x较2.x删减了一些功能，这里就2.6.3版本进行一些分析。
 
-[Slim Framework](https://www.slimframework.com/)是一个轻型PHP框架，适用于轻型的WebApp应用和Api的开发。
+## Directory Structure
 
-## 版本情况
-
-下述列表是[Slim各个版本](https://packagist.org/packages/slim/slim)和PHP的兼容情况。
-
-|Slim Framework Version|PHP Version|PHPUnit Support|Extra|
-|:--:|:--:|:--:|:--:|
-|1.x|>=5.2.0|Unknown|End of Life|
-|2.x|>=5.3.0|Support|Maintaining|
-|3.x|>=5.5.0|4.x Support|Maintaining|
-|4.x|>=5.6.0|5.7.x/6.x Support|Developping|
-
-## 文档
-
-2.x的文档地址为[http://docs.slimframework.com/](http://docs.slimframework.com/)。
-3.x的文档地址为[https://www.slimframework.com/docs/](https://www.slimframework.com/docs/)。
-
-# Examples
-
-## Installation
-
-Slim框架通过[Composer](https://getcomposer.org/)进行安装。
+下面所示为安装完成之后Slim核心文件的目录结构。
 
 {% highlight bash %}
-# 安装Slim 2.x版本
-composer require slim/slim:~2.0 -vvv
+vendor/slim/slim/Slim/
+                    ├── Environment.php
+                    ├── Exception
+                    │   ├── Pass.php
+                    │   └── Stop.php
+                    ├── Helper
+                    │   └── Set.php
+                    ├── Http
+                    │   ├── Cookies.php
+                    │   ├── Headers.php
+                    │   ├── Request.php
+                    │   ├── Response.php
+                    │   └── Util.php
+                    ├── Log.php
+                    ├── LogWriter.php
+                    ├── Middleware
+                    │   ├── ContentTypes.php
+                    │   ├── Flash.php
+                    │   ├── MethodOverride.php
+                    │   ├── PrettyExceptions.php
+                    │   └── SessionCookie.php
+                    ├── Middleware.php
+                    ├── Route.php
+                    ├── Router.php
+                    ├── Slim.php
+                    └── View.php
 {% endhighlight %}
 
-## Simple Usage
-
-{% highlight php %}
-<?php
-
-require "vendor/autoload.php";
-
-$app = new \Slim\Slim([
-    "debug" => true,
-    "mode" => "development",
-        ]);
-$app->get('/hello/:name', function ($name) {
-    echo "Hello, " . $name;
-});
-$app->run();
-{% endhighlight %}
