@@ -1,8 +1,8 @@
 ---
 layout: post
-title: Slim Framework - 1
+title: Slim Framework - 2
 categories: [Framework, PHP]
-description: Generals about PHP Slim Framework.
+description: Learn design patterns from PHP Framework Source Codes.
 keywords: Framework, PHP
 ---
 # Generals
