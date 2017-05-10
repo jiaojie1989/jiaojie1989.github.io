@@ -89,6 +89,11 @@ Router主要存储应用设定的多个路由信息，然后对当前的访问UR
 Request实例包含Http Request的全部信息(环境变量、Cookies、Headers)，在请求此项目时直接由Environment单例构造生成。
 
 ### Http/Response.php
+
+响应类，存储于Slim实例的容器中，单例方式存在。
+
+Response实例是服务器Slim应用实例对Http请求的处理结果，执行匹配成功的Route的业务逻辑代码之后，再经由各中间件进行处理，最终返回给用户的Http响应。
+
 ### Exception
 
 
