@@ -70,6 +70,14 @@ Slim框架主要实现了[Rack协议](https://blog.engineyard.com/2015/understan
 
 Slim实例应用在初始化后，运行`run()`方法处理Http请求，其中会按照堆栈方式调用Middleware的`call()`方法，最底层调用Slim实例的`call()`方法。
 
+框架中给出了Middleware的几个实现：
+
+* ContentTypes
+* Flash
+* MethodOverride
+* PrettyExceptions
+* SessionCookie
+
 ### Route.php
 
 路由类，每一条路由都是的一个Route实例。
@@ -95,6 +103,8 @@ Request实例包含Http Request的全部信息(环境变量、Cookies、Headers)
 Response实例是服务器Slim应用实例对Http请求的处理结果，执行匹配成功的Route的业务逻辑代码之后，再经由各中间件进行处理，最终返回给用户的Http响应。
 
 ### Exception
+
+异常扩展
 
 
 
