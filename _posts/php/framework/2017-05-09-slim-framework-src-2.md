@@ -58,24 +58,38 @@ vendor/slim/slim/Slim/
 
 ### Environment.php
 
-配置信息的存储器，在Slim类实例的Container中，单例方式存在。
+配置、环境信息的存储器，在Slim类实例的Container中，单例方式存在。
 
 ### Middleware.php
 
 中间件抽象类。
 
-Slim框架主要实现了Rack协议的一种版本，中间件在应用生命周期中可以拦截、修改、分析包括环境变量、Http请求、响应在内的各种信息体。
+Slim框架主要实现了[Rack协议](https://blog.engineyard.com/2015/understanding-rack-apps-and-middleware)的一种版本，中间件在应用生命周期中可以拦截、修改、分析包括环境变量、Http请求、响应在内的各种信息体。
 
 中间件的实质是一个堆栈，底部是Slim类的实例，上层均为Middleware抽象类的实现。
 
 Slim实例应用在初始化后，运行`run()`方法处理Http请求，其中会按照堆栈方式调用Middleware的`call()`方法，最底层调用Slim实例的`call()`方法。
 
 ### Route.php
+
+路由类，每一条路由都是的一个Route实例。
+
+Slim应用实例在设定路由的时候会调用自身的`mapRoute()`方法，使用传递过来的路由参数构造一个全新的Route实例，然后置入路由处理实例Router的路由数组中，这个数组是**FIFO**的。
+
 ### Router.php
+
+路由处理类，存储于Slim实例的容器中，单例方式存在。
+
+Router主要存储应用设定的多个路由信息，然后对当前的访问URL进行匹配，给出相应的匹配路由。
+
 ### Http/Request.php
+
+请求类，存储于Slim实例的容器中，单例方式存在。
+
+Request实例包含Http Request的全部信息(环境变量、Cookies、Headers)，在请求此项目时直接由Environment单例构造生成。
+
 ### Http/Response.php
 ### Exception
 
-# Highlight Points
 
 
