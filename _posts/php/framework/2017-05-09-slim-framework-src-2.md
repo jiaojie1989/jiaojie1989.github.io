@@ -104,7 +104,7 @@ Response实例是服务器Slim应用实例对Http请求的处理结果，执行�
 
 ### Exception
 
-异常扩展
+异常扩展，Slim扩展的两个异常主要用于流程控制。
 
-
-
+* Pass
+* Stop
