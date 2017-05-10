@@ -62,7 +62,13 @@ vendor/slim/slim/Slim/
 
 ### Middleware.php
 
-中间件抽象类，
+中间件抽象类。
+
+Slim框架主要实现了Rack协议的一种版本，中间件在应用生命周期中可以拦截、修改、分析包括环境变量、Http请求、响应在内的各种信息体。
+
+中间件的实质是一个堆栈，底部是Slim类的实例，上层均为Middleware抽象类的实现。
+
+Slim实例应用在初始化后，运行`run()`方法处理Http请求，其中会按照堆栈方式调用Middleware的`call()`方法，最底层调用Slim实例的`call()`方法。
 
 ### Route.php
 ### Router.php
