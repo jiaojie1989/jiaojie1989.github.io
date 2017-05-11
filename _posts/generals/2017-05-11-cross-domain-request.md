@@ -180,9 +180,75 @@ Content-Type: text/html; charset=utf-8
 
 原则上，非简单请求也应该支持Cookie，这一部分没有测试。
 
-#### 开发方案
+### 开发方案
+
+#### 应用内开发
 
 可以采用Rack中间件的方式控制相关的流程。
+
+#### 服务器层面
+
+这一部分摘自[junyi.me博客](http://junyi.me/blog/s17.html)。
+
+从Apache和Nginx的服务器配置层面解决此类问题。
+
+{% highlight apache %}
+# ----------------------------------------------------------------------
+# Allow loading of external fonts
+# ----------------------------------------------------------------------
+<FilesMatch "\.(ttf|otf|eot|woff)$">
+    <IfModule mod_headers.c>
+        SetEnvIf Origin "http(s)?://(www\.)?(google.com|staging.google.com|development.google.com|otherdomain.net|dev02.otherdomain.net)$" AccessControlAllowOrigin=$0
+        Header add Access-Control-Allow-Origin %{AccessControlAllowOrigin}e env=AccessControlAllowOrigin
+    </IfModule>
+</FilesMatch>
+{% endhighlight %}
+
+{% highlight nginx %}
+#
+# Wide-open CORS config for nginx
+#
+
+# allow origin list
+set $ACAO 'http://www.test.com http://user.test.com';
+
+# set single origin
+if ($http_origin ~* ^https?://(www|user)\.test\.com$) {
+    set $ACAO $http_origin;
+}
+
+if ($request_method = 'OPTIONS') {
+    add_header 'Access-Control-Allow-Origin' '$ACAO';
+    #
+    # Om nom nom cookies
+    #
+    add_header 'Access-Control-Allow-Credentials' 'true';
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+    #
+    # Custom headers and headers various browsers *should* be OK with but aren't
+    #
+    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+    #
+    # Tell client that this pre-flight info is valid for 20 days
+    #
+    add_header 'Access-Control-Max-Age' 1728000;
+    add_header 'Content-Type' 'text/plain charset=UTF-8';
+    add_header 'Content-Length' 0;
+    return 204;
+}
+if ($request_method = 'POST') {
+    add_header 'Access-Control-Allow-Origin' '$ACAO';
+    add_header 'Access-Control-Allow-Credentials' 'true';
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+}
+if ($request_method = 'GET') {
+    add_header 'Access-Control-Allow-Origin' '$ACAO';
+    add_header 'Access-Control-Allow-Credentials' 'true';
+    add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+    add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+}
+{% endhighlight %}
 
 ### 支持
 
