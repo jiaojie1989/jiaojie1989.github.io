@@ -132,4 +132,45 @@ class Set implements \ArrayAccess, \Countable, \IteratorAggregate
 }
 {% endhighlight %}
 
+### 匿名函数
 
+如果作为依赖的是匿名函数，那么如何存储的是没有被调用过的原样的闭包呢？
+
+Slim中我们可以使用依赖容器的`protect()`方法进行闭包的保存。
+
+{% highlight php %}
+<?php
+$app = new \Slim\Slim();
+
+// 定义一个闭包
+$app->myClosure = $app->container->portect(function(){});
+
+// 返回没有调用的原始闭包
+$myClosure = $app->myClosure;
+{% endhighlight %}
+
+其实现利用了PHP闭包中的`use`关键字进行状态保存。
+{% highlight php %}
+<?php
+namespace Slim\Helper;
+
+class Set implements \ArrayAccess, \Countable, \IteratorAggregate
+{
+    // ...
+
+    /**
+     * Protect closure from being directly invoked
+     * @param  \Closure $callable A closure to keep from being invoked and evaluated
+     * @return \Closure
+     */
+    public function protect(\Closure $callable)
+    {
+        return function () use ($callable) {
+            // 没被invoke过的Closure
+            return $callable;
+        };
+    }
+
+    // ...
+}
+{% endhighlight %}
