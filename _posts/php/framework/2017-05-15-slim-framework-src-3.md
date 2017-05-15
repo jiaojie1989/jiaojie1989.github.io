@@ -96,7 +96,7 @@ $std_1 = $app->std;
 $std_2 = $app->std;
 
 // 断言两者是同一个实例
-assert(true === (spl_object_hash($std_1) === spl_object_hash($std_2)));
+assert(spl_object_hash($std_1) === spl_object_hash($std_2));
 {% endhighlight %}
 
 它的实现是利用了PHP匿名函数中的`static`修饰符，实现如下。
