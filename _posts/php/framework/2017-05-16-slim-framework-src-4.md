@@ -200,6 +200,6 @@ class Slim {
 }
 {% endhighlight %}
 
-`mapRoute`方法使用用户设定的路由参数，构造一个`Slim\Route`实例，并返回给前置的设定方法，设定该路由所适配的HTTP请求方法。
+`mapRoute`方法使用用户设定的路由参数，构造一个`Slim\Route`实例，并返回给前置的设定方法，设定该路由所适配的HTTP请求。
 
 其中group部分的实现很有意思，
