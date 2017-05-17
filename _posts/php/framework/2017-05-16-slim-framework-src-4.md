@@ -29,7 +29,21 @@ $app->run();
 
 在构造一个`Slim\Slim`实例的时候，我们做了如下的操作。
 
-* IoC容器
+* 设定依赖容器`\Slim\Helper\Set`
+* 初始化系统级的依赖
+    * settings
+    * environment
+    * request
+    * response
+    * router
+    * view
+    * logWriter
+    * log
+* 初始化系统中间件stack
+    * 将应用实例自身压入stack底部
+    * 放入其他中间件
+        * Flash
+        * MethodOverride
 
 {% highlight php %}
 <?php
@@ -128,3 +142,64 @@ class Slim
 
 ### Set Routes' List for Future Request Dispatch
 
+构造Slim类的实例之后，应用开始对路由进行配置。
+
+路由的配置需要最少三样事物，
+
+1. 请求方法
+2. 匹配uri
+3. 处理函数
+
+这里仅就GET方法进行举例，POST/DELETE/PUT/OPTION/PATCH的方法与GET类似，只是`via`后面的参数会发生变化。
+
+{% highlight php %}
+<?php
+namespace Slim;
+
+class Slim {
+
+    /**
+     * Add GET route
+     * @see    mapRoute()
+     * @return \Slim\Route
+     */
+    public function get()
+    {
+        $args = func_get_args();
+
+        return $this->mapRoute($args)->via(\Slim\Http\Request::METHOD_GET, \Slim\Http\Request::METHOD_HEAD);
+    }
+}
+{% endhighlight %}
+
+最终，这些请求的参数都是转发到`mapRoute`方法上。
+
+{% highlight php %}
+<?php
+namespace Slim;
+
+class Slim {
+
+    protected function mapRoute($args)
+    {
+        // 第一个参数，uri
+        $pattern = array_shift($args);
+        // 最后一个参数，路由的执行函数
+        $callable = array_pop($args);
+        // 构造路由类实例
+        $route = new \Slim\Route($pattern, $callable, $this->settings['routes.case_sensitive']);
+        // group相关的操作
+        $this->router->map($route);
+        // 剩下的其他参数，路由中间件
+        if (count($args) > 0) {
+            $route->setMiddleware($args);
+        }
+
+        return $route;
+    }
+}
+{% endhighlight %}
+
+`mapRoute`方法使用用户设定的路由参数，构造一个`Slim\Route`实例，并返回给前置的设定方法，设定该路由所适配的HTTP请求方法。
+
+其中group部分的实现很有意思，
