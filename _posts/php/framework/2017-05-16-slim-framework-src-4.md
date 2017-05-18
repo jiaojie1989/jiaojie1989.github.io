@@ -202,4 +202,151 @@ class Slim {
 
 `mapRoute`方法使用用户设定的路由参数，构造一个`Slim\Route`实例，并返回给前置的设定方法，设定该路由所适配的HTTP请求。
 
-其中group部分的实现很有意思，
+其中group部分的实现很有意思，由于Slim在设置路由组的时候可以嵌套，比如下述结构：
+
+{% highlight php %}
+<?php
+$app = new \Slim\Slim();
+
+// API group
+$app->group('/api', function () use ($app) {
+
+    // Library group
+    $app->group('/library', function () use ($app) {
+
+        // Get book with ID
+        $app->get('/books/:id', function ($id) {
+
+        });
+
+        // Update book with ID
+        $app->put('/books/:id', function ($id) {
+
+        });
+
+        // Delete book with ID
+        $app->delete('/books/:id', function ($id) {
+
+        });
+
+    });
+
+});
+{% endhighlight %}
+
+路由组group实现了一个先进后出的stack结构。
+
+{% highlight php %}
+<?php
+namespace Slim;
+
+class Slim {
+
+    /**
+     * Route Groups
+     *
+     * This method accepts a route pattern and a callback all Route
+     * declarations in the callback will be prepended by the group(s)
+     * that it is in
+     *
+     * Accepts the same parameters as a standard route so:
+     * (pattern, middleware1, middleware2, ..., $callback)
+     */
+    public function group()
+    {
+        $args = func_get_args();
+        $pattern = array_shift($args);
+        $callable = array_pop($args);
+        // 将group的pattern和路由中间件存到router的group组中
+        $this->router->pushGroup($pattern, $args);
+        if (is_callable($callable)) {
+            call_user_func($callable);
+        }
+        $this->router->popGroup();
+    }
+}
+{% endhighlight %}
+
+Router类的实现参见下述代码，如果存在多级的group，那么`Router::$routeGroups`会保存这些多级的group。
+
+{% highlight php %}
+<?php
+namespace Slim;
+
+class Router {
+
+    /**
+     * @var array Array containing all route groups
+     */
+    protected $routeGroups;
+
+    /**
+     * Add a route group to the array
+     * @param  string     $group      The group pattern (ie. "/books/:id")
+     * @param  array|null $middleware Optional parameter array of middleware
+     * @return int        The index of the new group
+     */
+    public function pushGroup($group, $middleware = array())
+    {
+        return array_push($this->routeGroups, array($group => $middleware));
+    }
+
+    /**
+     * Removes the last route group from the array
+     * @return bool    True if successful, else False
+     */
+    public function popGroup()
+    {
+        return (array_pop($this->routeGroups) !== null);
+    }
+}
+{% endhighlight %}
+
+单个路由在调用`mapRoute`的时候，会从`Router`中调用`map`方法，这个方法就是向单个的路由添加当前存在`routeGroups`的路由组的pattern和路由中间件。
+
+{% highlight php %}
+<?php
+namespace Slim;
+
+class Router {
+
+    /**
+     * Add a route object to the router
+     * @param  \Slim\Route     $route      The Slim Route
+     */
+    public function map(\Slim\Route $route)
+    {
+        list($groupPattern, $groupMiddleware) = $this->processGroups();
+
+        $route->setPattern($groupPattern . $route->getPattern()); // 合并group的pattern和自己的pattern
+        $this->routes[] = $route;
+
+
+        foreach ($groupMiddleware as $middleware) {
+            $route->setMiddleware($middleware);
+        }
+    }
+
+    /**
+     * A helper function for processing the group's pattern and middleware
+     * @return array Returns an array with the elements: pattern, middlewareArr
+     */
+    protected function processGroups()
+    {
+        $pattern = "";
+        $middleware = array();
+        foreach ($this->routeGroups as $group) {
+            $k = key($group);
+            $pattern .= $k; // 合并pattern
+            if (is_array($group[$k])) {
+                $middleware = array_merge($middleware, $group[$k]); // 合并路由中间件
+            }
+        }
+        return array($pattern, $middleware); // 返回所属group(s)的pattern和路由中间件
+    }
+}
+{% endhighlight %}
+
+### Run App
+
+Slim实例在完成路由设置后，就可以进入运行阶段了。
