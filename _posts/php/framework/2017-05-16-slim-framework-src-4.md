@@ -487,3 +487,130 @@ class Slim {
     }
 }
 {% endhighlight %}
+
+这段代码基本按照注释的流程执行的，其中重要的是以下三点
+* 寻找匹配路由
+* 路由分发
+* 输出响应
+
+#### Get matched routes
+
+`Router`是Slim框架里解析路由的类，其实例的`getMatchedRoutes()`方法接受两个参数：Http Method和请求Uri。
+
+{% highlight php %}
+<?php
+namespace Slim;
+
+class Router {
+
+    /**
+     * Return route objects that match the given HTTP method and URI
+     * @param  string               $httpMethod   The HTTP method to match against
+     * @param  string               $resourceUri  The resource URI to match against
+     * @param  bool                 $reload       Should matching routes be re-parsed?
+     * @return array[\Slim\Route]
+     */
+    public function getMatchedRoutes($httpMethod, $resourceUri, $reload = false)
+    {
+        if ($reload || is_null($this->matchedRoutes)) {
+            $this->matchedRoutes = array(); // 初始化匹配路由s
+            foreach ($this->routes as $route) { // 遍历路由列表（fifo）
+                if (!$route->supportsHttpMethod($httpMethod) && !$route->supportsHttpMethod("ANY")) {
+                    continue;
+                }
+
+                if ($route->matches($resourceUri)) {
+                    $this->matchedRoutes[] = $route;
+                }
+            }
+        }
+
+        return $this->matchedRoutes;
+    }
+}
+{% endhighlight %}
+
+对于每个Request而言，其Uri和请求方法都是唯一的。
+
+`getMatchedRoutes()`方法将遍历Router实例中的`routes`属性，即应用设定的每一个路由；对于路由列表里面的每一个路由，首先判断是否支持Request的请求方法，然后判断相应的Uri是否匹配。
+
+判断Uri是否匹配使用了类`Route`的`matches()`方法，主要原理是将设定的路由转换成一个正则表达式，然后进行正则匹配。
+其中，如果遇到变量的标识`:`和变量组标识`+`会调用`matchesCallback()`进行特殊替换。
+
+{% highlight php %}
+<?php
+namespace Slim;
+
+class Route {
+
+    /**
+     * Matches URI?
+     *
+     * Parse this route's pattern, and then compare it to an HTTP resource URI
+     * This method was modeled after the techniques demonstrated by Dan Sosedoff at:
+     *
+     * http://blog.sosedoff.com/2009/09/20/rails-like-php-url-router/
+     *
+     * @param  string $resourceUri A Request URI
+     * @return bool
+     */
+    public function matches($resourceUri)
+    {
+        //Convert URL params into regex patterns, construct a regex for this route, init params
+        $patternAsRegex = preg_replace_callback(
+            '#:([\w]+)\+?#',
+            array($this, 'matchesCallback'),
+            str_replace(')', ')?', (string)$this->pattern)
+        );
+        if (substr($this->pattern, -1) === '/') {
+            $patternAsRegex .= '?';
+        }
+
+        $regex = '#^' . $patternAsRegex . '$#';
+
+        if ($this->caseSensitive === false) {
+            $regex .= 'i';
+        }
+
+        //Cache URL params' names and values if this route matches the current HTTP request
+        if (!preg_match($regex, $resourceUri, $paramValues)) {
+            return false;
+        }
+        foreach ($this->paramNames as $name) {
+            if (isset($paramValues[$name])) {
+                if (isset($this->paramNamesPath[$name])) {
+                    $this->params[$name] = explode('/', urldecode($paramValues[$name]));
+                } else {
+                    $this->params[$name] = urldecode($paramValues[$name]);
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Convert a URL parameter (e.g. ":id", ":id+") into a regular expression
+     * @param  array $m URL parameters
+     * @return string       Regular expression for URL parameter
+     */
+    protected function matchesCallback($m)
+    {
+        $this->paramNames[] = $m[1];
+        if (isset($this->conditions[$m[1]])) {
+            return '(?P<' . $m[1] . '>' . $this->conditions[$m[1]] . ')';
+        }
+        if (substr($m[0], -1) === '+') {
+            $this->paramNamesPath[$m[1]] = 1;
+
+            return '(?P<' . $m[1] . '>.+)';
+        }
+
+        return '(?P<' . $m[1] . '>[^/]+)';
+    }
+}
+{% endhighlight %}
+
+#### Dispatch request
+
+#### Output response
