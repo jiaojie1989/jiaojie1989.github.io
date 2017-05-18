@@ -350,3 +350,140 @@ class Router {
 ### Run App
 
 Slim实例在完成路由设置后，就可以进入运行阶段了。
+
+{% highlight php %}
+<?php
+namespace Slim;
+
+class Slim {
+
+    /**
+     * Run
+     *
+     * This method invokes the middleware stack, including the core Slim application;
+     * the result is an array of HTTP status, header, and body. These three items
+     * are returned to the HTTP client.
+     */
+    public function run()
+    {
+        set_error_handler(array('\Slim\Slim', 'handleErrors'));
+
+        //Apply final outer middleware layers
+        if ($this->config('debug')) {
+            //Apply pretty exceptions only in debug to avoid accidental information leakage in production
+            $this->add(new \Slim\Middleware\PrettyExceptions());
+        }
+
+        //Invoke middleware and application stack
+        $this->middleware[0]->call();
+
+        //Fetch status, header, and body
+        list($status, $headers, $body) = $this->response->finalize();
+
+        // Serialize cookies (with optional encryption)
+        \Slim\Http\Util::serializeCookies($headers, $this->response->cookies, $this->settings);
+
+        //Send headers
+        if (headers_sent() === false) {
+            //Send status
+            if (strpos(PHP_SAPI, 'cgi') === 0) {
+                header(sprintf('Status: %s', \Slim\Http\Response::getMessageForCode($status)));
+            } else {
+                header(sprintf('HTTP/%s %s', $this->config('http.version'), \Slim\Http\Response::getMessageForCode($status)));
+            }
+
+            //Send headers
+            foreach ($headers as $name => $value) {
+                $hValues = explode("\n", $value);
+                foreach ($hValues as $hVal) {
+                    header("$name: $hVal", false);
+                }
+            }
+        }
+
+        //Send body, but only if it isn't a HEAD request
+        if (!$this->request->isHead()) {
+            echo $body;
+        }
+
+        $this->applyHook('slim.after');
+
+        restore_error_handler();
+    }
+}
+{% endhighlight %}
+
+核心部分大概只有一行`$this->middleware[0]->call();`，执行中间件stack的代码。由于Slim应用实例自身位于stack底部，所以最终执行的是`Slim::call()`。
+
+{% highlight php %}
+<?php
+namespace Slim;
+
+class Slim {
+
+    /**
+     * Call
+     *
+     * This method finds and iterates all route objects that match the current request URI.
+     */
+    public function call()
+    {
+        try {
+            // 设置相关的flash session数据
+            if (isset($this->environment['slim.flash'])) {
+                $this->view()->setData('flash', $this->environment['slim.flash']);
+            }
+            // 执行某个时间节点的hook
+            $this->applyHook('slim.before');
+            // 开启output buffer
+            ob_start();
+            $this->applyHook('slim.before.router');
+            // 先设置未分发到具体路由上
+            $dispatched = false;
+            // 找到匹配当前uri的路由(s)
+            $matchedRoutes = $this->router->getMatchedRoutes($this->request->getMethod(), $this->request->getResourceUri());
+            // 对匹配路由(s)执行分发，执行各路由预先设定的闭包函数
+            foreach ($matchedRoutes as $route) {
+                try {
+                    $this->applyHook('slim.before.dispatch');
+                    // 这里，执行的是设置路由的时候传入的闭包
+                    // 除非返回false，否则返回的都是true
+                    $dispatched = $route->dispatch();
+                    $this->applyHook('slim.after.dispatch');
+                    // 判断分发完成在这里，跳出循环
+                    if ($dispatched) {
+                        break;
+                    }
+                // 当然，闭包里面丢出一个Pass异常可以跳过此闭包逻辑，执行下一个匹配路由
+                } catch (\Slim\Exception\Pass $e) {
+                    continue;
+                }
+            }
+            // 如果没分发出去，那么肯定就是404了
+            if (!$dispatched) {
+                $this->notFound();
+            }
+            $this->applyHook('slim.after.router');
+            // 丢出Stop异常，路由部分结束
+            $this->stop();
+        } catch (\Slim\Exception\Stop $e) { // 正常的执行结果
+            // 把刚才输出的东西都丢到Response里面
+            $this->response()->write(ob_get_clean());
+        } catch (\Exception $e) { // 啊啊啊，遇到错误的执行结果了
+            if ($this->config('debug')) {
+                // 这个时候，Slim::run()刚刚塞进去的PrettyExceptions中间件就有用了
+                ob_end_clean();
+                throw $e;
+            } else {
+                try {
+                    // 不debug的时候的输出
+                    $this->response()->write(ob_get_clean());
+                    $this->error($e);
+                } catch (\Slim\Exception\Stop $e) {
+                    // Do nothing
+                }
+            }
+        }
+    }
+}
+{% endhighlight %}
