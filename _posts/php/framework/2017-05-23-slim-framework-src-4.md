@@ -613,4 +613,86 @@ class Route {
 
 #### Dispatch request
 
+这一部分的代码主要就是分发Request信息到匹配到的路由上，并执行绑定的路由中间件和闭包函数。
+
+{% highlight php %}
+<?php
+namespace Slim;
+
+class Route {
+    
+    /**
+     * Dispatch route
+     *
+     * This method invokes the route object's callable. If middleware is
+     * registered for the route, each callable middleware is invoked in
+     * the order specified.
+     *
+     * @return bool
+     */
+    public function dispatch()
+    {
+        foreach ($this->middleware as $mw) {
+            call_user_func_array($mw, array($this)); // 路由中间件闭包，会向内传递本Route的实例
+        }
+
+        $return = call_user_func_array($this->getCallable(), array_values($this->getParams()));
+        return ($return === false) ? false : true;
+    }
+}
+{% endhighlight %}
+
 #### Output response
+
+Slim实例将output buffer中的数据使用`ob_get_clean`收集完成，并将其放入到Response的实例中。
+
+{% highlight php %}
+<?php
+namespace Slim;
+
+class Response {
+    
+    /**
+     * Append HTTP response body
+     * @param  string   $body       Content to append to the current HTTP response body
+     * @param  bool     $replace    Overwrite existing response body?
+     * @return string               The updated HTTP response body
+     */
+    public function write($body, $replace = false)
+    {
+        if ($replace) {
+            $this->body = $body;
+        } else {
+            $this->body .= (string)$body;
+        }
+        $this->length = strlen($this->body);
+
+        return $this->body;
+    }
+
+    /**
+     * Finalize
+     *
+     * This prepares this response and returns an array
+     * of [status, headers, body]. This array is passed to outer middleware
+     * if available or directly to the Slim run method.
+     *
+     * @return array[int status, array headers, string body]
+     */
+    public function finalize()
+    {
+        // Prepare response
+        if (in_array($this->status, array(204, 304))) {
+            $this->headers->remove('Content-Type');
+            $this->headers->remove('Content-Length');
+            $this->setBody('');
+        }
+
+        return array($this->status, $this->headers, $this->body);
+    }
+}
+{% endhighlight %}
+
+之后在`Slim::run()`方法中，通过调用`Response::finalize()`方法将生成的响应状态、头部、内容返回给Slim实例，然后再输出出去。
+
+这样，一个完整的请求流程就完成了。
