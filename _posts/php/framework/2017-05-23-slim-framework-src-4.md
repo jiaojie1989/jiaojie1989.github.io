@@ -696,3 +696,9 @@ class Response {
 之后在`Slim::run()`方法中，通过调用`Response::finalize()`方法将生成的响应状态、头部、内容返回给Slim实例，然后再输出出去。
 
 这样，一个完整的请求流程就完成了。
+
+### Tips
+
+最后补上一张图。
+
+![slim-app-runtime-flow]({{site.baseurl}}/images/slim-framework/slim-app-runtime-flow.png)
