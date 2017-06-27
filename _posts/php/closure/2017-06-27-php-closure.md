@@ -11,4 +11,20 @@ keywords: PHP, Closure
 
 ## 函数式编程
 
+函数式编程(Functional Programming)是一种*编程范式*([Programming Paradigm](https://en.wikipedia.org/wiki/Programming_paradigm))。
+
+其要点有三：
+
+* 消除函数副作用(Eliminating side effects)
+
+由于非局部变量改变或跳出函数体的控制语句，而造成的函数*变量不满足交换率的作用。
+
+* 变量不变性(Avoiding mutable data)
+
+不改变非局部变量的状态，并且对于同样的输入，会造成相同的输出。
+
+* 函数作为程序基本数据类型(First-class citizens and higher-order functions)
+
+函数可以作为函数参数、被赋值和作为函数返回值。
+
 ## PHP匿名函数
