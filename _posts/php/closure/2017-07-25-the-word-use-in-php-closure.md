@@ -1,6 +1,6 @@
 ---
 layout: post
-title: `use` & Referance in PHP Closure
+title: Keyword use & Referance in PHP Closure
 categories: [PHP]
 description: Keyword `use`, and referances usage in PHP Language.
 keywords: PHP, Closure
