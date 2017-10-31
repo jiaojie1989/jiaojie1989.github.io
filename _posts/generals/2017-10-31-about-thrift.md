@@ -1,8 +1,8 @@
 ---
 layout: post
-title: 微服务与Thrift
-categories: [thrift, microservice]
-description: This is a general view of microservice and thrift framework.
+title: Thrift
+categories: [thrift]
+description: This is a general view of thrift framework.
 keywords: thrift
 ---
 # 缘由
