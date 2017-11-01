@@ -54,6 +54,180 @@ Thrift跨语言，跨平台，是多个异构系统揉合成一体的一个中�
 
 # 举个🌰
 
+Thrift最方便的就是能够自动生成各种语言的code，业务逻辑层面只需要关心调用逻辑即可，无需关注过于复杂的连接和协议代码．
+
+要使用Thrift去生成代码，首先要安装这么一个工具[官网link](http://thrift.apache.org/)，按照Guide中的说明进行安装；当然，Ubuntu可以用`apt install thrift`，Mac可以用`brew install thrift`来进行预编译好的二进制安装．
+
+安装完成之后，我们需要按照Thrift的语法书写一个文件，后面的各种语言的代码都是根据这个文件生成的，一般这种文件的后缀是`.thrift`．
+
+这里推荐一本开源书[<Thrift: The Missing Guide>](http://diwakergupta.github.io/thrift-missing-guide/)，里面有一些介绍．
+
+下面是我生成测试例子时候使用的idl文件：
+
+{% highlight thrift %}
+namespace java site.jiaojie.test.thrift.demo
+namespace php Jiaojie.Thrift.Test
+
+service  HelloWorldService {
+      string sayHello(1:string username)
+}
+{% endhighlight %}
+
+按照文档中的说明，我们使用`thrift --gen <language> hello.thrift`生成对应编程语言的库文件．
+
 Rpc的话，那么肯定分为Server和Client两端，下面用java实现一套简单的服务端。
 
-## Thrift Server
+## Server
+
+生成的java库文件如下所示：
+
+![gen java]({{site.baseurl}}/images/thrift/Screenshot_2017-11-01_18-33-13.png)
+
+我们建立一个Maven项目，引入`org.apache.thrift`的`libthrift`包，将生成的文件丢到相应的位置．
+
+新建立一个实现`sayHello`方法的类`HelloWorldImpl.java`，具体代码如下:
+
+{% highlight java %}
+package site.jiaojie.test.thrift.demo;
+
+import org.apache.thrift.TException;
+
+/**
+ *
+ * @author jiaojie <jiaojie@didichuxing.com thomasjiao@vip.qq.com>
+ */
+public class HelloWorldImpl implements HelloWorldService.Iface {
+
+    public HelloWorldImpl() {
+    }
+
+    @Override
+    public String sayHello(String username) throws TException {
+        String output = "hello, " + username;
+        System.out.println(output);
+        return output;
+    }
+
+}
+{% endhighlight %}
+
+然后再实现我们运行的main class，`HelloWorldServer.java`:
+
+{% highlight java %}
+package site.jiaojie.test.thrift.demo;
+
+import org.apache.thrift.TProcessor;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.server.TServer;
+import org.apache.thrift.server.TSimpleServer;
+import org.apache.thrift.server.TThreadPoolServer;
+import org.apache.thrift.transport.TServerSocket;
+import org.apache.thrift.protocol.TJSONProtocol;
+
+/**
+ *
+ * @author jiaojie <jiaojie@didichuxing.com thomasjiao@vip.qq.com>
+ */
+public class HelloServiceServer {
+
+    public static final int SERVER_PORT = 8090;
+
+    public void startServer() {
+        try {
+            System.out.println("HelloWorld TSimpleServer start ....");
+
+            TProcessor tprocessor = new HelloWorldService.Processor<HelloWorldService.Iface>(new HelloWorldImpl());
+            TServerSocket serverTransport = new TServerSocket(SERVER_PORT);
+//            TServer.Args tArgs = new TServer.Args(serverTransport);
+            TThreadPoolServer.Args tArgs = new TThreadPoolServer.Args(serverTransport);
+            tArgs.processor(tprocessor);
+            tArgs.protocolFactory(new TBinaryProtocol.Factory());
+//            TServer server = new TSimpleServer(tArgs);
+            TServer server = new TThreadPoolServer(tArgs);
+            server.serve();
+        } catch (Exception e) {
+            System.out.println("Server start error!!!");
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        HelloServiceServer server = new HelloServiceServer();
+        server.startServer();
+    }
+
+}
+{% endhighlight %}
+
+这样就完成了Server的编写．
+
+在编译过程中，遇到了一点小插曲
+
+    SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+
+根据[一篇博客](http://www.cnblogs.com/FocusIN/p/5853009.html)里面的信息，我们添加了`slf4j-nop`包进行解决．
+
+## Client
+
+C端当然要用万能的PHP进行编写了，首先引入`apache/thrift`包，再按指定目录放入thrift生成的php文件，最后使用的`composer.json`文件如下：
+
+{% highlight json %}
+{
+    "name": "jiaojie/test",
+    "description": "Description of project test.",
+    "authors": [
+        {
+            "name": "jiaojie",
+            "email": "thomasjiao@vip.qq.com"
+        }
+    ],
+    "require": {
+        "apache/thrift": "0.9.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jiaojie\\": "src"
+        },
+        "classmap": [
+            "src/Thrift"
+        ]
+    }
+}
+{% endhighlight %}
+
+C端程序的编写要注意和Server端的协议一致，我在Server端采用了Socket+Binary的方式，所以C端也要采用相同的方式建立连接：
+
+{% highlight php %}
+<?php
+
+/*
+ * Copyright (C) 2017 Didi
+ *  
+ *  
+ * 
+ * This script is firstly created at 2017-10-31.
+ * 
+ * To see more infomation,
+ *    visit our official website http://home.didichuxing.com/.
+ */
+
+use Jiaojie\Thrift\Test\HelloWorldServiceClient as Client;
+use Thrift\Transport\TCurlClient;
+use Thrift\Transport\TSocket;
+use Thrift\Protocol\TBinaryProtocol;
+use Thrift\Transport\TBufferedTransport;
+use Thrift\Transport\TFramedTransport;
+
+require "vendor/autoload.php";
+
+$client = new Client($input = new TBinaryProtocol($transport = new TBufferedTransport($sock = new TSocket("127.0.0.1", 8090, false, "var_dump"))));
+
+$transport->open();
+
+$output = $client->sayHello(rand());
+$transport->close();
+{% endhighlight %}
+
+# 小结
+
+这样就完成了一个简单的thrift示例．Didi的很多核心系统和基础设施都是通过这种Framework进行服务治理的，大概就这样^-^
