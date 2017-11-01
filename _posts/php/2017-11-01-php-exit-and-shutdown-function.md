@@ -52,7 +52,7 @@ class Demo {
 
 # Find out
 
-俗话说，外事不决问狗狗．但是，PHP的问题呢，我们看`manual`就足够了．
+俗话说，外事不决问狗狗．但是，PHP的问题呢，我们看[`manual`](http://php.net/manual/)就足够了．
 
 打开关于[`exit`](http://php.net/manual/en/function.exit.php)的页面，一句话赫然入目：
 
