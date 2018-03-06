@@ -108,4 +108,78 @@ class RegisterController extends Controller
 
 那么，如何编写测试用例来测试失败的情况呢？
 
-应该注意到，我们应该测试`$this->repository->get($id)`这段代码在Http请求出错时候的情况
+应该注意到，我们应该测试`$this->repository->get($id)`这段代码在Http请求出错时候的情况。
+
+*real-time facades*可以帮助我们进行类似mock的测试，这在进行测试或mock数据的时候很有用。
+
+那么我们需要将ApiArticleRepository改写成*real-time facades*的方式。
+
+{% highlight php %}
+<?php
+
+namespace App\Repositories;
+
+use Facades\GuzzleHttp\Client;
+
+class ApiArticleRepository implements ArticleRepository
+{
+
+    public function get($id)
+    {
+        return Client::get('posts', ['query' => ['id' => $id]]);
+    }
+}
+{% endhighlight %}
+
+这样，我们就可以通过*real-time facades*来进行我们想要进行的测试。
+
+{% highlight php %}
+<?php
+
+namespace Tests\Unit;
+
+use Tests\TestCase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+
+/**
+ * Description of ClientTest
+ *
+ * @encoding UTF-8 
+ * @author jiaojie <jiaojie@didichuxing.com> 
+ * @since 2018-02-27 11:12 (CST) 
+ * @version 0.1
+ * @description 
+ */
+class ClientTest extends TestCase
+{
+
+    /**
+     * 
+     * @test
+     */
+    public function testing_guzzle_exception()
+    {
+        \Facades\GuzzleHttp\Client::shouldReceive('get')->andThrow(
+                new \GuzzleHttp\Exception\RequestException(
+                "Error Communicating with Server", new \GuzzleHttp\Psr7\Request('GET', 'test')
+                )
+        );
+
+//        $this->expectException(\GuzzleHttp\Exception\RequestException::class);
+        $this->expectException(\GuzzleHttp\Exception\BadResponseException::class);
+
+//        $response = \Facades\GuzzleHttp\Client::get('/');
+//        $this->assertEquals(get_class($response), '1');
+//        $this->assertStatus(500);
+        
+        $repo = resolve('PostRepository');
+        $repo->get(1);
+    }
+
+}
+{% endhighlight %}
+
+# Thoughts
+
+使用*real-tiem facades*对外部服务进行测试，缩短了原来PHPUnit中使用*mock/stub*这样的代码，也有利于对故障排查的测试。
